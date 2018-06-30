@@ -3,6 +3,7 @@ require 'singleton'
 require 'sequel'
 require_relative 'router'
 require_relative 'controller'
+require_relative 'params_parser'
 
 module Simpler
   class Application
@@ -27,14 +28,24 @@ module Simpler
     end
 
     def call(env)
-      route = @router.route_for(env)
-      controller = route.controller.new(env)
-      action = route.action
-
-      make_response(controller, action)
+      @env = env
+      route = @router.route_for(@env)
+      if route
+        controller = route.controller.new(@env)
+        update_controller_params(controller, route) if route.additional_params?
+        action = route.action
+        make_response(controller, action)
+      else
+        error_response
+      end
     end
 
     private
+
+    def update_controller_params(controller, route)
+      additional_params = ParamsParser.call(route, @env['REQUEST_PATH'])
+      controller.update_params!(additional_params)
+    end
 
     def require_app
       Dir["#{Simpler.root}/app/**/*.rb"].each { |file| require file }
@@ -52,6 +63,18 @@ module Simpler
 
     def make_response(controller, action)
       controller.make_response(action)
+    end
+
+    def error_response
+      [404, headers, body]
+    end
+
+    def headers
+      { 'Content-Type' => 'text/plain' }
+    end
+
+    def body
+      ['']
     end
 
   end
