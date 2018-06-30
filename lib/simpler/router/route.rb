@@ -12,14 +12,18 @@ module Simpler
       end
 
       def match?(method, path)
-        if @path.include?(':id')
-          path_id = path.split('/')[2]
-          return path_match = false if path_id.nil?
-          path_match = path.match @path.gsub(':id', path_id)
+        if @path.include?(':')
+          route_pattern = build_route_pattern
         else
-          path_match = path.match(@path)
+          route_pattern = @path
         end
-        @method == method && path_match
+        method == @method && path.match(route_pattern)
+      end
+
+      def build_route_pattern
+        @path.split('/').map do |route_part|
+          route_part.include?(':') ? /([a-z]|\d)+/ : route_part
+        end.join('/')
       end
     end
   end

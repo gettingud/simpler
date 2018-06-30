@@ -1,4 +1,4 @@
 require_relative 'config/environment'
 
-use Logger
+use HttpLogger
 run Simpler.application

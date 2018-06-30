@@ -58,11 +58,7 @@ module Simpler
     end
 
     def error_response
-      [status, headers, body]
-    end
-
-    def status
-      404
+      [404, headers, body]
     end
 
     def headers
